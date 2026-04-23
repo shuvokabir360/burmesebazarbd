@@ -1,117 +1,109 @@
-import { useEffect, useState, useRef } from 'react';
-import { supabase } from '../../lib/supabase';
-import { FaStar, FaStarHalfStroke } from 'react-icons/fa6';
+import { useEffect, useRef, useState } from 'react';
+import { FaStar, FaCircleCheck, FaQuoteLeft, FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 
-const fallbackReviews = [
-    { id: '1', reviewer_name: 'ফাতেমা আক্তার', reviewer_location: 'ঢাকা', rating: 5, review_text: 'আমি অনেকদিন ধরে নানির রেসিপির মতো আচার খুঁজছিলাম — অবশেষে পেয়ে গেছি! আমের আচারটা অসাধারণ। পুরো পরিবার মুগ্ধ। আমরা তিনবার অর্ডার করেছি!' },
-    { id: '2', reviewer_name: 'রশিদ আহমেদ', reviewer_location: 'চট্টগ্রাম', rating: 5, review_text: 'চালতার আচার খেয়ে মাথা নষ্ট! কোথাও পাইনি — দোকানে না, অনলাইনেও না। আর কোয়ালিটি? দাদির হাতের মতো! প্যাকেজিং একদম পারফেক্ট — একটুও লিক হয়নি।' },
-    { id: '3', reviewer_name: 'নুসরাত ইসলাম', reviewer_location: 'সিলেট', rating: 4.5, review_text: 'বাবা-মায়ের জন্য গিফট হিসেবে অর্ডার করেছিলাম — তারা ফোন করে আনন্দে কেঁদে দিলেন! বললেন বাড়ির কথা মনে পড়ে গেছে। রসুনের আচারটা একদম আসক্তিকর। সেরা ৳৮৯৯ খরচ!' },
+const reviews = [
+    {
+        name: 'মাইনুল হাসান', initial: 'ম',
+        text: 'এর আগে অন্য একটা পেজ থেকে আচার কিনে প্রতারিত হয়েছিলাম। আপনাদের আচারের মান আসলেই প্রিমিয়াম। ধন্যবাদ আপনাদের। ❤️',
+    },
+    {
+        name: 'কামরুল হাসান শাওন', initial: 'ক',
+        text: '৩ কেজির বক্স আজ হাতে পেলাম। আচারগুলো তাজা আছে, স্বাদও অসাধারণ! 🔥',
+    },
+    {
+        name: 'শানজাতুল হক সোনালী', initial: 'শ',
+        text: 'সব কাউকেই হাতে পেয়েছি আচারগুলো খুবই ভালো মানের ★★★ ধন্যবাদ',
+    },
+    {
+        name: 'তাজুল ইসলাম', initial: 'ত',
+        text: 'আচারের কোয়ালিটি অনেক ভালো। পরিবারের সবাই খুব পছন্দ করেছে।',
+    },
 ];
 
-function StarRating({ rating }) {
-    const full = Math.floor(rating);
-    const half = rating % 1 >= 0.5;
-    return (
-        <div className="review-stars">
-            {Array.from({ length: full }, (_, i) => <FaStar key={i} />)}
-            {half && <FaStarHalfStroke />}
-        </div>
-    );
-}
-
-function getInitials(name) {
-    return name.split(' ').map(w => w[0]).join('').slice(0, 2);
-}
-
 export default function ReviewsSection() {
-    const [reviews, setReviews] = useState(fallbackReviews);
-    const [countersAnimated, setCountersAnimated] = useState(false);
-    const statsRef = useRef(null);
+    const ref = useRef(null);
+    const [idx, setIdx] = useState(0);
 
     useEffect(() => {
-        async function fetchReviews() {
-            try {
-                const { data, error } = await supabase
-                    .from('reviews')
-                    .select('*')
-                    .eq('is_visible', true)
-                    .order('created_at', { ascending: false });
-                if (!error && data && data.length > 0) setReviews(data);
-            } catch (e) { /* fallback */ }
-        }
-        fetchReviews();
+        const observer = new IntersectionObserver(
+            entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+            { threshold: 0.1 }
+        );
+        ref.current?.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        return () => observer.disconnect();
     }, []);
 
-    // Counter animation
+    // Auto-slide
     useEffect(() => {
-        const handleScroll = () => {
-            if (countersAnimated || !statsRef.current) return;
-            const rect = statsRef.current.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-                setCountersAnimated(true);
-                statsRef.current.querySelectorAll('.stat-number').forEach(counter => {
-                    const target = parseFloat(counter.dataset.count);
-                    const isDecimal = target % 1 !== 0;
-                    const duration = 2000;
-                    const start = performance.now();
-                    const update = (now) => {
-                        const progress = Math.min((now - start) / duration, 1);
-                        const eased = 1 - Math.pow(1 - progress, 3);
-                        counter.textContent = isDecimal ? (eased * target).toFixed(1) : Math.floor(eased * target).toLocaleString();
-                        if (progress < 1) requestAnimationFrame(update);
-                        else counter.textContent = isDecimal ? target.toFixed(1) : target.toLocaleString();
-                    };
-                    requestAnimationFrame(update);
-                });
-            }
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        handleScroll();
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [countersAnimated]);
+        const interval = setInterval(() => setIdx(prev => (prev + 1) % reviews.length), 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const prev = () => setIdx(i => (i - 1 + reviews.length) % reviews.length);
+    const next = () => setIdx(i => (i + 1) % reviews.length);
+    const review = reviews[idx];
 
     return (
-        <section className="section reviews-section" id="reviews">
-            <div className="container">
-                <div className="section-header">
-                    <span className="section-tag">⭐ হাজারো মানুষের পছন্দ</span>
-                    <h2 className="section-title">কাস্টমাররা কী <span className="text-gradient">বলছেন</span></h2>
-                    <p className="section-desc">বাংলাদেশের সব প্রান্ত থেকে আচারপ্রেমীদের আসল গল্প।</p>
-                </div>
+        <section ref={ref} style={{ background: 'var(--cream)' }} id="reviews">
+            <div className="container max-w-3xl">
+                <h2 className="reveal section-title">
+                    সম্মানিত কাস্টমারদের <span style={{ color: 'var(--red)' }}>ফিডব্যাক</span>
+                </h2>
+                <p className="reveal reveal-delay-1 section-subtitle">তাদের অভিজ্ঞতা থেকে জানুন আমাদের আচারের মান</p>
 
-                <div className="reviews-grid">
-                    {reviews.map((r) => (
-                        <div className="review-card" key={r.id} id={`review-${r.id}`}>
-                            <StarRating rating={r.rating} />
-                            <blockquote className="review-text">"{r.review_text}"</blockquote>
-                            <div className="reviewer">
-                                <div className="reviewer-avatar">{getInitials(r.reviewer_name)}</div>
-                                <div className="reviewer-info">
-                                    <strong>{r.reviewer_name}</strong>
-                                    <span>{r.reviewer_location} • ভেরিফাইড ক্রেতা</span>
+                {/* Slider */}
+                <div className="reveal reveal-delay-2 relative rounded-[2rem] p-8 md:p-14 shadow-xl text-center" style={{ background: 'var(--white)' }}>
+                    <FaQuoteLeft className="text-5xl mx-auto mb-6 opacity-10" style={{ color: 'var(--red)' }} />
+
+                    <div className="transition-all duration-500" key={idx}>
+                        <p className="text-lg md:text-xl leading-relaxed mb-8" style={{ color: 'var(--gray-700)' }}>
+                            "{review.text}"
+                        </p>
+
+                        <div className="flex items-center justify-center gap-4">
+                            <div
+                                className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold"
+                                style={{ background: 'var(--red)', color: 'white' }}
+                            >
+                                {review.initial}
+                            </div>
+                            <div className="text-left">
+                                <div className="font-bold flex items-center gap-2" style={{ color: 'var(--gray-900)' }}>
+                                    {review.name} <FaCircleCheck className="text-sm" style={{ color: 'var(--blue)' }} />
+                                </div>
+                                <div className="flex gap-0.5 text-yellow-400 text-xs mt-0.5">
+                                    {[...Array(5)].map((_, i) => <FaStar key={i} />)}
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    </div>
+
+                    {/* Nav Arrows */}
+                    <button onClick={prev} className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-colors hover:bg-gray-50" style={{ background: 'white', borderColor: 'var(--gray-200)', color: 'var(--gray-500)' }}>
+                        <FaChevronLeft />
+                    </button>
+                    <button onClick={next} className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center border shadow-md transition-colors hover:bg-gray-50" style={{ background: 'white', borderColor: 'var(--gray-200)', color: 'var(--gray-500)' }}>
+                        <FaChevronRight />
+                    </button>
+
+                    {/* Dots */}
+                    <div className="flex justify-center gap-2 mt-8">
+                        {reviews.map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setIdx(i)}
+                                className="w-2.5 h-2.5 rounded-full transition-all"
+                                style={{ background: i === idx ? 'var(--red)' : 'var(--gray-300)' }}
+                            />
+                        ))}
+                    </div>
                 </div>
 
-                <div className="reviews-stats" ref={statsRef}>
-                    <div className="stat-item">
-                        <span className="stat-number" data-count="2500">0</span><span className="stat-suffix">+</span>
-                        <span className="stat-label">সন্তুষ্ট কাস্টমার</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-number" data-count="4800">0</span><span className="stat-suffix">+</span>
-                        <span className="stat-label">বয়াম ডেলিভারি</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-number" data-count="4.9">0</span>
-                        <span className="stat-label">গড় রেটিং</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-number" data-count="64">0</span>
-                        <span className="stat-label">জেলায় ডেলিভারি</span>
-                    </div>
+                {/* Return Policy */}
+                <div className="reveal reveal-delay-3 mt-10 text-center p-6 rounded-2xl border" style={{ background: 'var(--white)', borderColor: 'var(--gray-200)' }}>
+                    <p className="font-semibold" style={{ color: 'var(--gray-700)' }}>
+                        প্রোডাক্ট হাতে পেয়ে ভালো লাগলে রেখে দিন, আর ভালো না লাগলে কেবল ডেলিভারি চার্জ দিয়ে রিটার্ন করে দিন — একদম নিশ্চিন্তে অর্ডার করুন! ✅
+                    </p>
                 </div>
             </div>
         </section>

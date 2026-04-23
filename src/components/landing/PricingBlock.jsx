@@ -1,82 +1,94 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import { FaArrowDown, FaTags, FaCircleCheck, FaFire, FaClock } from 'react-icons/fa6';
-import { useOrderModal } from '../../context/OrderModalContext';
+import { useState, useEffect, useRef } from 'react';
+import { FaClock, FaFire } from 'react-icons/fa6';
+import { useOrderModal } from './OrderModal';
 
 export default function PricingBlock() {
-    const [combo, setCombo] = useState({
-        name: 'প্রিমিয়াম কম্বো প্যাকেজ',
-        subtitle: '৬টি প্রিমিয়াম আইটেমের সাথে থাকছে ১টি সম্পূর্ণ ফ্রি!',
-        regular_price: 1000,
-        combo_price: 799,
-        discount_percent: 25,
-    });
-    const { openModal } = useOrderModal();
+    const ref = useRef(null);
+    const { open } = useOrderModal();
+    const [time, setTime] = useState({ d: 2, h: 11, m: 45, s: 30 });
 
     useEffect(() => {
-        async function fetchCombo() {
-            try {
-                const { data, error } = await supabase
-                    .from('combo_packages')
-                    .select('*')
-                    .eq('is_active', true)
-                    .limit(1)
-                    .single();
-                if (!error && data) setCombo(data);
-            } catch (e) { /* fallback */ }
-        }
-        fetchCombo();
+        const observer = new IntersectionObserver(
+            entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+            { threshold: 0.1 }
+        );
+        ref.current?.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        return () => observer.disconnect();
     }, []);
 
-    const savings = combo.regular_price - combo.combo_price;
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTime(prev => {
+                let { d, h, m, s } = prev;
+                s--;
+                if (s < 0) { s = 59; m--; }
+                if (m < 0) { m = 59; h--; }
+                if (h < 0) { h = 23; d--; }
+                if (d < 0) return { d: 0, h: 0, m: 0, s: 0 };
+                return { d, h, m, s };
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
-    const scrollTo = (e, id) => {
-        e.preventDefault();
-        const el = document.querySelector(id);
-        if (el) {
-            const y = el.getBoundingClientRect().top + window.scrollY - 80;
-            window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-    };
+    const pad = n => String(n).padStart(2, '0');
+
+    const timerBoxes = [
+        { val: pad(time.d), label: 'দিন' },
+        { val: pad(time.h), label: 'ঘণ্টা' },
+        { val: pad(time.m), label: 'মিনিট' },
+        { val: pad(time.s), label: 'সেকেন্ড' },
+    ];
 
     return (
-        <div className="pricing-block" id="pricing">
-            <div className="pricing-card">
-                <div className="pricing-card-bg"></div>
-                <div className="pricing-header">
-                    <span className="pricing-tag">সীমিত সময়</span>
-                    <h3>{combo.name}</h3>
-                    <p className="pricing-subtitle">{combo.subtitle}</p>
+        <section ref={ref} id="pricing" style={{ background: 'var(--red-light)' }}>
+            <div className="container max-w-3xl text-center">
+                {/* Header */}
+                <div className="reveal flex items-center justify-center gap-3 mb-3">
+                    <FaClock className="text-2xl md:text-3xl" style={{ color: 'var(--red)' }} />
+                    <h2 className="text-2xl md:text-4xl font-bold" style={{ color: 'var(--red)' }}>
+                        এখনই অর্ডার করুন — অফার শেষ হচ্ছে!
+                    </h2>
                 </div>
-                <div className="pricing-body">
-                    <div className="price-comparison">
-                        <div className="price-regular">
-                            <span className="price-label">আলাদা আলাদা কিনলে</span>
-                            <span className="price-value strikethrough">৳ {combo.regular_price.toLocaleString()}</span>
+                <p className="reveal reveal-delay-1 mb-10" style={{ color: 'var(--gray-500)' }}>
+                    ডেলিভারির সময় টেস্ট করে পছন্দ হলে পে করুন। কোনো ঝুঁকি নেই!
+                </p>
+
+                {/* Countdown */}
+                <div className="reveal reveal-delay-2 flex justify-center gap-3 md:gap-5 mb-12">
+                    {timerBoxes.map((t, i) => (
+                        <div key={i} className="rounded-2xl shadow-lg p-4 md:p-6 min-w-[75px] md:min-w-[100px]"
+                            style={{ background: 'var(--white)', borderBottom: '4px solid var(--yellow)' }}>
+                            <div className="text-3xl md:text-5xl font-bold" style={{ color: 'var(--red)' }}>{t.val}</div>
+                            <div className="text-xs font-semibold mt-1" style={{ color: 'var(--gray-400)' }}>{t.label}</div>
                         </div>
-                        <div className="price-divider">
-                            <div className="arrow-down"><FaArrowDown /></div>
-                        </div>
-                        <div className="price-combo">
-                            <span className="price-label">কম্বো মূল্য</span>
-                            <span className="price-value highlight">৳ {combo.combo_price.toLocaleString()}</span>
-                        </div>
+                    ))}
+                </div>
+
+                {/* Pricing Card */}
+                <div className="reveal reveal-delay-3 rounded-[2rem] p-8 md:p-14 shadow-2xl mb-10" style={{ background: 'var(--white)' }}>
+                    <p className="text-lg mb-1" style={{ color: 'var(--gray-500)' }}>রেগুলার মূল্য</p>
+                    <p className="text-2xl font-bold line-through mb-4" style={{ color: 'var(--gray-400)' }}>৳১০০০ টাকা</p>
+                    <p className="text-xl font-bold mb-2" style={{ color: 'var(--gray-900)' }}>সীমিত সময়ের অফার মূল্য</p>
+                    <div className="inline-block relative my-4">
+                        <span className="text-5xl md:text-7xl font-bold" style={{ color: 'var(--red)' }}>৳৭৯৯</span>
+                        <span className="text-xl md:text-2xl font-semibold ml-2" style={{ color: 'var(--gray-500)' }}>টাকা মাত্র</span>
                     </div>
-                    <div className="savings-badge">
-                        <FaTags /> আপনার সাশ্রয় <strong>৳ {savings}</strong> <span className="savings-percent">(ডেলিভারি একদম ফ্রি!)</span>
-                    </div>
-                    <ul className="pricing-perks">
-                        <li><FaCircleCheck /> ৬টি প্রিমিয়াম আইটেম + ১টি ফ্রি</li>
-                        <li><FaCircleCheck /> সারাদেশে ফ্রি ডেলিভারি</li>
-                        <li><FaCircleCheck /> ডেলিভারির সময় টেস্ট করে নেয়ার সুযোগ</li>
-                        <li><FaCircleCheck /> ১০০% খাঁটি ও কেমিক্যাল মুক্ত</li>
-                    </ul>
-                    <button className="btn btn-primary btn-xl pulse-glow" id="pricingCta" onClick={openModal} style={{ fontFamily: 'inherit', border: 'none', cursor: 'pointer', width: '100%' }}>
-                        <FaFire /> এখনই অর্ডার করুন — অফার শেষ হচ্ছে!
+                </div>
+
+                {/* CTA */}
+                <div className="reveal reveal-delay-4">
+                    <button
+                        onClick={open}
+                        className="btn-order text-2xl px-14 py-6"
+                    >
+                        <FaFire /> অর্ডার করতে চাই 🔥
                     </button>
-                    <p className="pricing-note"><FaClock /> স্টক থাকা পর্যন্ত অফার। প্রতি মাসে সীমিত ব্যাচ।</p>
+                    <p className="mt-6 text-sm font-semibold animate-pulse" style={{ color: 'var(--red)' }}>
+                        ⚠️ অফার আর কিছুক্ষণ! স্টক সীমিত।
+                    </p>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

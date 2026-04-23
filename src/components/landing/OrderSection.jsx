@@ -1,97 +1,125 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FaWhatsapp } from 'react-icons/fa6';
-import { FaArrowRight, FaBoxOpen, FaFaceGrinHearts, FaMoneyBill1Wave, FaTruckFast, FaShieldHeart, FaBagShopping, FaPhone } from 'react-icons/fa6';
+import { FaTruck, FaBagShopping, FaLock, FaCircleCheck } from 'react-icons/fa6';
 
-export default function OrderSection({ settings }) {
-    const [siteSettings, setSiteSettings] = useState({});
+export default function OrderSection() {
+    const ref = useRef(null);
+    const [loading, setLoading] = useState(false);
+    const [price] = useState(799);
+    const [form, setForm] = useState({ name: '', phone: '', address: '' });
 
     useEffect(() => {
-        async function fetchSettings() {
-            try {
-                const { data, error } = await supabase.from('site_settings').select('*');
-                if (!error && data) {
-                    const map = {};
-                    data.forEach(s => map[s.key] = s.value);
-                    setSiteSettings(map);
-                }
-            } catch (e) { /* fallback */ }
-        }
-        fetchSettings();
+        const observer = new IntersectionObserver(
+            entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
+            { threshold: 0.1 }
+        );
+        ref.current?.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        return () => observer.disconnect();
     }, []);
 
-    const phone = siteSettings.phone || '+880 XXXX-XXXXXX';
-    const whatsapp = siteSettings.whatsapp || '880XXXXXXXXXX';
+    const onChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const onSubmit = async e => {
+        e.preventDefault();
+        if (!/^01[3-9]\d{8}$/.test(form.phone)) return alert('সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন');
+        if (!form.name.trim() || !form.address.trim()) return alert('নাম ও ঠিকানা দিন');
+
+        setLoading(true);
+        try {
+            const { error } = await supabase.from('orders').insert([{
+                customer_name: form.name, phone: form.phone, address: form.address,
+                quantity: 1, total_price: price, status: 'pending',
+            }]);
+            if (error) throw error;
+            alert('✅ অর্ডার সফল! শীঘ্রই কল করব।');
+            setForm({ name: '', phone: '', address: '' });
+        } catch {
+            alert('সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const inputCls = "w-full border-2 rounded-xl px-5 py-4 outline-none transition-colors font-semibold";
 
     return (
-        <section className="section order-section" id="order">
-            <div className="container">
-                <div className="section-header">
-                    <span className="section-tag">📦 সহজ অর্ডার</span>
-                    <h2 className="section-title">কিভাবে <span className="text-gradient">পাবেন</span></h2>
-                    <p className="section-desc">তিনটি সহজ ধাপে আপনার আচার পৌঁছে যাবে।</p>
+        <section ref={ref} id="checkout" style={{ background: 'var(--cream)' }}>
+            <div className="container max-w-5xl">
+                <div className="reveal text-center mb-12">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5" style={{ background: 'var(--green-light)', color: 'var(--green)' }}>
+                        <FaLock /> নিরাপদ চেকআউট
+                    </div>
+                    <h2 className="section-title mb-2">অর্ডার <span style={{ color: 'var(--red)' }}>কনফার্ম করুন</span></h2>
+                    <p className="section-subtitle">সঠিক তথ্য দিয়ে ফর্ম পূরণ করুন — আমরাই ফোন করব</p>
                 </div>
 
-                <div className="steps-grid">
-                    <div className="step-card" id="step-1">
-                        <div className="step-number">১</div>
-                        <div className="step-icon"><FaWhatsapp /></div>
-                        <h3>অর্ডার করুন</h3>
-                        <p>অর্ডার বাটনে ক্লিক করুন অথবা WhatsApp-এ নাম, ঠিকানা ও পরিমাণ জানান।</p>
-                    </div>
-                    <div className="step-connector"><FaArrowRight /></div>
-                    <div className="step-card" id="step-2">
-                        <div className="step-number">২</div>
-                        <div className="step-icon"><FaBoxOpen /></div>
-                        <h3>প্যাক ও শিপ</h3>
-                        <p>আপনার আচার ফ্রেশ প্যাক করে লিক-প্রুফ বয়ামে ২৪ ঘণ্টার মধ্যে পাঠানো হবে।</p>
-                    </div>
-                    <div className="step-connector"><FaArrowRight /></div>
-                    <div className="step-card" id="step-3">
-                        <div className="step-number">৩</div>
-                        <div className="step-icon"><FaFaceGrinHearts /></div>
-                        <h3>গ্রহণ করুন ও পেমেন্ট</h3>
-                        <p>ডেলিভারির সময় টেস্ট করে পছন্দ হলে পে করুন। কোনো ঝুঁকি নেই!</p>
-                    </div>
-                </div>
+                <div className="reveal reveal-delay-1 grid lg:grid-cols-5 gap-0 rounded-[2rem] overflow-hidden shadow-2xl border" style={{ borderColor: 'var(--gray-200)', background: 'var(--white)' }}>
+                    {/* Left Summary */}
+                    <div className="lg:col-span-2 p-8 md:p-10" style={{ background: 'var(--gray-50)' }}>
+                        <h3 className="font-bold text-xl mb-8" style={{ color: 'var(--gray-900)' }}>🛒 অর্ডার সামারি</h3>
 
-                <div className="trust-grid">
-                    <div className="trust-card" id="trust-cod">
-                        <FaMoneyBill1Wave />
-                        <h4>ক্যাশ অন ডেলিভারি</h4>
-                        <p>আচার হাতে পেয়ে টাকা দিন। অনলাইন পেমেন্টের ঝামেলা নেই।</p>
-                    </div>
-                    <div className="trust-card" id="trust-delivery">
-                        <FaTruckFast />
-                        <h4>সারাদেশে ডেলিভারি</h4>
-                        <p>বাংলাদেশের ৬৪ জেলায় দ্রুত ও নিরাপদ ডেলিভারি।</p>
-                    </div>
-                    <div className="trust-card" id="trust-guarantee">
-                        <FaShieldHeart />
-                        <h4>সন্তুষ্টির গ্যারান্টি</h4>
-                        <p>সন্তুষ্ট না হলে? আমরা ঠিক করে দেব — এটাই আমাদের প্রতিশ্রুতি।</p>
-                    </div>
-                    <div className="trust-card" id="trust-fresh">
-                        <FaBagShopping />
-                        <h4>ফ্রেশ প্যাকিং</h4>
-                        <p>প্রতিটি অর্ডার ফ্রেশ প্যাক করা হয়। পুরানো স্টক না, বাসি না।</p>
-                    </div>
-                </div>
-
-                {/* Final CTA */}
-                <div className="final-cta-block" id="finalCta">
-                    <div className="final-cta-content">
-                        <h2>আসল <span className="text-gradient">স্বাদ</span> নিতে প্রস্তুত?</h2>
-                        <p>ডেলিভারির সময় টেস্ট করে পছন্দ হলে পে করুন। কোনো ঝুঁকি নেই!</p>
-                        <div className="final-cta-buttons">
-                            <a href={`https://wa.me/${whatsapp}?text=হ্যালো!%20আমি%20আচার%20কম্বো%20প্যাকেজ%20অর্ডার%20করতে%20চাই।`} className="btn btn-whatsapp btn-xl" id="ctaWhatsapp" target="_blank" rel="noopener">
-                                <FaWhatsapp /> WhatsApp-এ অর্ডার করুন
-                            </a>
-                            <a href={`tel:${phone}`} className="btn btn-primary btn-xl" id="ctaPhone">
-                                <FaPhone /> কল করে অর্ডার করুন
-                            </a>
+                        <div className="flex gap-4 items-start mb-8 pb-8 border-b" style={{ borderColor: 'var(--gray-200)' }}>
+                            <img src="/assets/images/premium_pickle_combo.png" alt="Combo" className="w-20 h-20 rounded-xl object-cover border-2 border-white shadow-md"
+                                 onError={e => { e.target.src = 'https://images.unsplash.com/photo-1540331547168-8b63109225b7?auto=format&fit=crop&q=80&w=200'; }} />
+                            <div>
+                                <div className="font-bold" style={{ color: 'var(--gray-900)' }}>আচার কম্বো প্যাকেজ</div>
+                                <div className="text-xs" style={{ color: 'var(--gray-400)' }}>৬ আইটেম + ১ ফ্রি</div>
+                                <div className="font-bold mt-1" style={{ color: 'var(--red)' }}>৳{price}</div>
+                            </div>
                         </div>
-                        <p className="final-cta-price">কম্বো মূল্য: <strong>৳৭৯৯</strong> <span className="strikethrough">৳১০০০</span> — ডেলিভারি একদম ফ্রি!</p>
+
+                        <div className="space-y-3 text-sm mb-8">
+                            <div className="flex justify-between"><span style={{ color: 'var(--gray-500)' }}>সাবটোটাল</span><span className="font-bold">৳{price}</span></div>
+                            <div className="flex justify-between font-bold" style={{ color: 'var(--green)' }}><span>ডেলিভারি</span><span>ফ্রি</span></div>
+                            <div className="flex justify-between text-xl font-bold pt-3 border-t" style={{ borderColor: 'var(--gray-200)', color: 'var(--red)' }}><span>সর্বমোট</span><span>৳{price}</span></div>
+                        </div>
+
+                        <div className="flex gap-3 items-center p-4 rounded-xl" style={{ background: 'var(--green-light)' }}>
+                            <FaTruck className="text-xl" style={{ color: 'var(--green)' }} />
+                            <div>
+                                <div className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--green)' }}>ক্যাশ অন ডেলিভারি</div>
+                                <div className="text-xs" style={{ color: 'var(--gray-500)' }}>পণ্য হাতে পেয়ে পে করুন</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Form */}
+                    <div className="lg:col-span-3 p-8 md:p-10 lg:p-14">
+                        <form onSubmit={onSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gray-400)' }}>
+                                    আপনার নাম <FaCircleCheck className="inline text-green-500 ml-1" />
+                                </label>
+                                <input type="text" name="name" required placeholder="পুরো নাম" value={form.name} onChange={onChange}
+                                    className={inputCls} style={{ borderColor: 'var(--gray-200)' }}
+                                    onFocus={e => e.target.style.borderColor = 'var(--red)'}
+                                    onBlur={e => e.target.style.borderColor = 'var(--gray-200)'}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gray-400)' }}>
+                                    মোবাইল নাম্বার <FaCircleCheck className="inline text-green-500 ml-1" />
+                                </label>
+                                <input type="tel" name="phone" required placeholder="01XXXXXXXXX" value={form.phone} onChange={onChange}
+                                    className={inputCls} style={{ borderColor: 'var(--gray-200)' }}
+                                    onFocus={e => e.target.style.borderColor = 'var(--red)'}
+                                    onBlur={e => e.target.style.borderColor = 'var(--gray-200)'}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--gray-400)' }}>
+                                    সম্পূর্ণ ঠিকানা <FaCircleCheck className="inline text-green-500 ml-1" />
+                                </label>
+                                <textarea name="address" rows="3" required placeholder="বাসা, রোড, এলাকা, থানা, জেলা" value={form.address} onChange={onChange}
+                                    className={`${inputCls} resize-none`} style={{ borderColor: 'var(--gray-200)' }}
+                                    onFocus={e => e.target.style.borderColor = 'var(--red)'}
+                                    onBlur={e => e.target.style.borderColor = 'var(--gray-200)'}
+                                />
+                            </div>
+                            <button type="submit" disabled={loading} className="btn-order w-full text-xl py-5">
+                                {loading ? 'অপেক্ষা করুন...' : <><FaBagShopping /> অর্ডার কনফার্ম করুন</>}
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
