@@ -45,7 +45,20 @@ export default function DashboardTab() {
         setLoading(false);
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => {
+        fetchData();
+
+        const channel = supabase
+            .channel('dashboard_realtime_orders')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                fetchData();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
     const updateStatus = async (id, status) => {
         await supabase.from('orders').update({ status }).eq('id', id);

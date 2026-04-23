@@ -36,7 +36,20 @@ export default function OrdersTab() {
         if (pData) setProducts(pData);
     };
 
-    useEffect(() => { fetchData(); }, [filter]);
+    useEffect(() => {
+        fetchData();
+
+        const channel = supabase
+            .channel('orders_tab_realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                fetchData();
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [filter]);
 
     const updateStatus = async (id, status) => {
         await supabase.from('orders').update({ status }).eq('id', id);
