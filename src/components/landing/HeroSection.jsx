@@ -1,13 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
-import { FaFire } from 'react-icons/fa6';
+import { useEffect, useRef, useState, useMemo } from 'react';
+import { FaFire, FaPhone } from 'react-icons/fa6';
 import { useOrderModal } from './OrderModal';
 import { useLandingContent, parseHeroImages } from '../../context/LandingContentContext';
+
+// Premium color palettes — picks one randomly on each page load
+const BUTTON_THEMES = [
+    { bg: 'linear-gradient(135deg, #B91C1C 0%, #EF4444 50%, #DC2626 100%)', shadow: 'rgba(185,28,28,0.45)', ring: '#EF4444' },
+    { bg: 'linear-gradient(135deg, #047857 0%, #10B981 50%, #059669 100%)', shadow: 'rgba(4,120,87,0.45)', ring: '#10B981' },
+    { bg: 'linear-gradient(135deg, #1D4ED8 0%, #3B82F6 50%, #2563EB 100%)', shadow: 'rgba(29,78,216,0.45)', ring: '#3B82F6' },
+    { bg: 'linear-gradient(135deg, #7C3AED 0%, #A78BFA 50%, #8B5CF6 100%)', shadow: 'rgba(124,58,237,0.45)', ring: '#A78BFA' },
+    { bg: 'linear-gradient(135deg, #C2410C 0%, #F97316 50%, #EA580C 100%)', shadow: 'rgba(194,65,12,0.45)', ring: '#F97316' },
+    { bg: 'linear-gradient(135deg, #0F766E 0%, #14B8A6 50%, #0D9488 100%)', shadow: 'rgba(15,118,110,0.45)', ring: '#14B8A6' },
+];
 
 export default function HeroSection() {
     const ref = useRef(null);
     const { open } = useOrderModal();
-    const { content } = useLandingContent();
+    const { content, settings } = useLandingContent();
     const [currentSlide, setCurrentSlide] = useState(0);
+    const phone = settings?.phone || '+8801732559177';
+
+    // Pick a random color theme once per mount (page load)
+    const btnTheme = useMemo(() => BUTTON_THEMES[Math.floor(Math.random() * BUTTON_THEMES.length)], []);
 
     const slides = parseHeroImages(content.hero_images);
 
@@ -34,22 +48,44 @@ export default function HeroSection() {
         <header
             ref={ref}
             id="hero"
-            style={{ background: 'linear-gradient(160deg, #FFFBF0 0%, #FEF3C7 40%, #FEE2E2 100%)' }}
-            className="relative overflow-hidden pt-6 pb-16 md:pt-10 md:pb-24"
+            style={{ 
+                background: 'radial-gradient(circle at 0% 0%, #FFFBF0 0%, transparent 50%), radial-gradient(circle at 100% 0%, #FEE2E2 0%, transparent 50%), #FFFDF5' 
+            }}
+            className="relative overflow-hidden"
         >
-            <div className="container">
-                {/* Navbar */}
-                <nav className="flex items-center justify-between py-3 mb-10 md:mb-16">
+            {/* Top Announcement Bar (Moving Text) */}
+            <div className="w-full py-2 overflow-hidden bg-[#e67e22]/10 backdrop-blur-md border-b border-[#e67e22]/20">
+                <div 
+                    className="flex whitespace-nowrap animate-marquee-fast"
+                    style={{ animationDuration: `${content.announcement_speed || 15}s` }}
+                >
+                    {[1, 2, 3, 4].map((_, i) => (
+                        <div key={i} className="flex items-center gap-10 px-4 text-[11px] md:text-sm font-bold text-[#d35400] tracking-wide">
+                            {content.announcement_text?.split('|').map((t, idx) => (
+                                <span key={idx}>{t.trim()}</span>
+                            ))}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="container pt-6 pb-16 md:pt-10 md:pb-24">
+                {/* Top Menu Style Navbar */}
+                <nav className="flex items-center justify-between py-5 mb-10 md:mb-16 border-b border-gray-200/50">
                     <a href="#" className="flex flex-col leading-tight">
-                        <span style={{ color: 'var(--red)' }} className="text-xl md:text-2xl font-bold">মায়ের হাতের</span>
-                        <span style={{ color: 'var(--yellow)' }} className="text-xs font-bold tracking-widest uppercase">আসল স্বাদ</span>
+                        <span className="text-2xl md:text-3xl font-black tracking-tight" style={{ color: 'var(--red)' }}>
+                            বার্মিজ <span style={{ color: 'var(--yellow-dark)' }}>বাজার বিডি</span>
+                        </span>
+                        <span className="text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">
+                            শতভাগ খাঁটি ও প্রিমিয়াম পণ্যের নির্ভরযোগ্য প্রতিষ্ঠান
+                        </span>
                     </a>
                     <a
-                        href="tel:+8801732559177"
-                        className="text-sm font-semibold px-5 py-2 rounded-full border-2 transition-colors"
+                        href={`tel:${phone}`}
+                        className="flex items-center gap-2 text-sm font-bold px-6 py-2.5 rounded-full border-2 transition-all hover:bg-red-50"
                         style={{ borderColor: 'var(--red)', color: 'var(--red)' }}
                     >
-                        📞 কল করুন
+                        <FaPhone className="text-xs" /> কল করুন
                     </a>
                 </nav>
 
@@ -101,46 +137,62 @@ export default function HeroSection() {
                         <div className="reveal relative">
                             <div className="absolute inset-0 rounded-full blur-[80px] opacity-20" style={{ background: 'var(--red)' }}></div>
                             <div className="relative">
-                                <div className="w-[280px] md:w-[400px] rounded-[2rem] border-[6px] border-white shadow-2xl overflow-hidden relative"
-                                     style={{ aspectRatio: '3/4' }}>
+                                <div className="w-full md:w-[480px] rounded-[1.5rem] md:rounded-[2.5rem] border-[4px] md:border-[8px] border-white shadow-2xl overflow-hidden relative"
+                                     style={{ aspectRatio: '4/5' }}>
                                     {slides.map((slide, i) => (
                                         <img
                                             key={i}
                                             src={slide.src}
                                             alt={slide.alt}
-                                            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                                            className="absolute inset-0 w-full h-full object-cover transition-all duration-700"
                                             style={{ opacity: i === currentSlide ? 1 : 0 }}
                                         />
                                     ))}
-                                </div>
-
-                                {/* Dots */}
-                                {slides.length > 1 && (
-                                    <div className="flex justify-center gap-2 mt-4">
-                                        {slides.map((_, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => setCurrentSlide(i)}
-                                                className="w-2.5 h-2.5 rounded-full transition-all duration-300"
-                                                style={{
-                                                    background: i === currentSlide ? 'var(--red)' : '#D1D5DB',
-                                                    transform: i === currentSlide ? 'scale(1.3)' : 'scale(1)',
-                                                }}
-                                            />
-                                        ))}
+                                    
+                                    {/* Premium Price Tag */}
+                                    <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl shadow-xl z-20 border border-white/50">
+                                        <div className="text-[10px] font-bold text-gray-400 line-through leading-none mb-1">৳{regularPrice}</div>
+                                        <div className="text-xl font-black text-[#e74c3c] leading-none">৳{offerPrice}</div>
                                     </div>
-                                )}
 
-                                {/* Badges */}
-                                <div className="absolute -top-4 -right-4 md:-top-6 md:-right-6 px-4 py-2 rounded-xl shadow-lg text-sm font-bold z-10"
-                                    style={{ background: 'var(--green)', color: 'white' }}>
-                                    🚚 ফ্রি ডেলিভারি
+                                    {/* Premium Organic Badge */}
+                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg border border-yellow-500/30 z-20">
+                                        <div className="text-[10px] uppercase font-black text-[#f39c12] leading-none text-center">Premium</div>
+                                        <div className="text-xs font-bold text-gray-800 leading-tight mt-1">১০০% অর্গানিক</div>
+                                    </div>
                                 </div>
-                                <div className="absolute -bottom-4 -left-4 md:-bottom-6 md:-left-6 px-5 py-3 rounded-xl shadow-lg z-10" style={{ background: 'white' }}>
-                                    <div className="text-xs font-semibold line-through" style={{ color: 'var(--gray-400)' }}>৳{regularPrice}</div>
-                                    <div className="text-2xl font-bold" style={{ color: 'var(--red)' }}>৳{offerPrice}</div>
+
+                                {/* Thumbnail Gallery */}
+                                <div className="flex flex-wrap justify-center gap-2 mt-6">
+                                    {slides.map((slide, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentSlide(i)}
+                                            className={`w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                                                i === currentSlide ? 'border-[#f39c12] scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'
+                                            }`}
+                                        >
+                                            <img src={slide.src} className="w-full h-full object-cover" alt="" />
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
+
+                            {/* Order Button Below Image — Glossy Premium */}
+                            <button
+                                onClick={open}
+                                className="hero-glossy-btn w-full mt-6"
+                                style={{
+                                    background: btnTheme.bg,
+                                    boxShadow: `0 8px 28px ${btnTheme.shadow}, inset 0 1px 0 rgba(255,255,255,0.25)`,
+                                    '--ring-color': btnTheme.ring,
+                                }}
+                            >
+                                <span className="hero-glossy-shine"></span>
+                                <span className="hero-glossy-content">
+                                    <FaFire /> {content.hero_cta_text}
+                                </span>
+                            </button>
                         </div>
                     </div>
                 </div>

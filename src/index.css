@@ -205,3 +205,123 @@ section {
         font-size: 2.75rem;
     }
 }
+
+/* ─── Glossy Premium Order Button ─── */
+.hero-glossy-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 32px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Hind Siliguri', sans-serif;
+}
+
+/* Glossy shine overlay */
+.hero-glossy-shine {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+        180deg,
+        rgba(255,255,255,0.3) 0%,
+        rgba(255,255,255,0.08) 40%,
+        transparent 50%,
+        rgba(0,0,0,0.05) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Animated light sweep */
+.hero-glossy-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(255,255,255,0.35) 45%,
+        rgba(255,255,255,0.5) 50%,
+        rgba(255,255,255,0.35) 55%,
+        transparent 70%
+    );
+    transform: skewX(-20deg);
+    animation: glossySweep 3s ease-in-out infinite;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Pulsating ring */
+.hero-glossy-btn::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 19px;
+    border: 3px solid var(--ring-color, #EF4444);
+    opacity: 0;
+    animation: glossyPulseRing 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-glossy-content {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #FFFFFF;
+    font-weight: 800;
+    font-size: 1.15rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    letter-spacing: 0.3px;
+}
+
+.hero-glossy-btn:hover {
+    transform: translateY(-4px) scale(1.02);
+    filter: brightness(1.1);
+}
+
+.hero-glossy-btn:active {
+    transform: translateY(-1px) scale(0.99);
+}
+
+@keyframes glossySweep {
+    0% { left: -60%; }
+    40% { left: 120%; }
+    100% { left: 120%; }
+}
+
+@keyframes glossyPulseRing {
+    0% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.04); opacity: 0; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+@media (max-width: 768px) {
+    .hero-glossy-btn {
+        padding: 16px 24px;
+    }
+    .hero-glossy-content {
+        font-size: 1.05rem;
+    }
+}
+
+/* ─── Marquee Animation ─── */
+@keyframes marqueeFast {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-33.33%); }
+}
+
+.animate-marquee-fast {
+    animation: marqueeFast 15s linear infinite;
+}

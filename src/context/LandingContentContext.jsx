@@ -24,20 +24,31 @@ const DEFAULTS = {
     stat_pure: '১০০%',
     footer_cta_headline: 'সেরা কোয়ালিটির আচার কম্বো প্যাকেজ',
     footer_cta_subtitle: 'এখনই অর্ডার করতে নিচের বাটনে ক্লিক করুন',
+    announcement_text: '🚚 সারা বাংলাদেশে ক্যাশ অন ডেলিভারি দেওয়া হয় | ✨ ১০০% খাঁটি ও প্রিমিয়াম কোয়ালিটির নিশ্চয়তা | 🔥 অফার সীমিত সময়ের জন্য',
+    announcement_speed: '15',
 };
 
 export function LandingContentProvider({ children }) {
     const [content, setContent] = useState(DEFAULTS);
+    const [settings, setSettings] = useState({ phone: '+8801732559177' });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetch() {
             try {
+                // Fetch landing content
                 const { data } = await supabase.from('landing_content').select('*');
                 if (data && data.length > 0) {
                     const map = { ...DEFAULTS };
                     data.forEach(row => { map[row.key] = row.value; });
                     setContent(map);
+                }
+                // Fetch site settings (phone, whatsapp, etc.)
+                const { data: settingsData } = await supabase.from('site_settings').select('*');
+                if (settingsData && settingsData.length > 0) {
+                    const sMap = {};
+                    settingsData.forEach(s => { sMap[s.key] = s.value; });
+                    setSettings(prev => ({ ...prev, ...sMap }));
                 }
             } catch {
                 // Silently fall back to defaults
@@ -49,7 +60,7 @@ export function LandingContentProvider({ children }) {
     }, []);
 
     return (
-        <LandingContentContext.Provider value={{ content, loading }}>
+        <LandingContentContext.Provider value={{ content, settings, loading }}>
             {children}
         </LandingContentContext.Provider>
     );

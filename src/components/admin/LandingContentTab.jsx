@@ -110,6 +110,51 @@ export default function LandingContentTab() {
             {/* ═══ PRICING ═══ */}
             <div style={cardStyle}>
                 <h3 style={{ marginBottom: 16, fontSize: '1.1rem' }}>💰 মূল্য ও টাইমার</h3>
+                
+                {/* ═══ LIVE PREVIEW FOR ANNOUNCEMENT ═══ */}
+                <div style={{ marginBottom: 24 }}>
+                    <label style={labelStyle}>👀 অ্যানাউন্সমেন্ট বার প্রিভিউ (লাইভ)</label>
+                    <div className="w-full py-2 overflow-hidden bg-[#e67e22]/10 rounded-xl border border-[#e67e22]/20">
+                        <div 
+                            className="flex whitespace-nowrap animate-marquee-fast"
+                            style={{ animationDuration: `${data.announcement_speed || 15}s` }}
+                        >
+                            {[1, 2, 3].map((_, i) => (
+                                <div key={i} className="flex items-center gap-10 px-4 text-[11px] md:text-xs font-bold text-[#d35400] tracking-wide">
+                                    {(data.announcement_text || '🚚 সারা বাংলাদেশে ক্যাশ অন ডেলিভারি | ১০০% খাঁটি পণ্য').split('|').map((t, idx) => (
+                                        <span key={idx}>{t.trim()}</span>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: '#9CA3AF', marginTop: 6, marginBottom: 16 }}>
+                        * টেক্সটগুলোকে <code>|</code> চিহ্ন দিয়ে আলাদা করুন। কম সেকেন্ড দিলে গতি বাড়বে, বেশি দিলে গতি কমবে।
+                    </p>
+
+                    <div className="landing-editor-grid">
+                        <div className="landing-editor-span-2">
+                             <label style={labelStyle}>📣 স্ক্রলিং টেক্সট এডিট করুন</label>
+                             <textarea
+                                style={{ ...inputStyle, minHeight: 60 }}
+                                value={data.announcement_text || ''}
+                                onChange={e => onChange('announcement_text', e.target.value)}
+                                placeholder="🚚 ফ্রি ডেলিভারি | ১০০% খাঁটি পণ্য"
+                             />
+                        </div>
+                        <div>
+                             <label style={labelStyle}>⚡ স্ক্রলিং গতি (সেকেন্ড)</label>
+                             <input
+                                type="number"
+                                style={inputStyle}
+                                value={data.announcement_speed || ''}
+                                onChange={e => onChange('announcement_speed', e.target.value)}
+                                placeholder="15"
+                             />
+                        </div>
+                    </div>
+                </div>
+
                 <div className="landing-editor-grid">
                     <div>
                         <label style={labelStyle}>রেগুলার মূল্য (৳)</label>

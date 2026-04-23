@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { FaPhone } from 'react-icons/fa6';
+import { useLandingContent } from '../../context/LandingContentContext';
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
+    const { settings } = useLandingContent();
+    const phone = settings?.phone || '+8801732559177';
 
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 20);
@@ -16,9 +19,9 @@ export default function Navbar() {
             <div className="w-full bg-[#f39c12] shadow-lg border-b border-[#e67e22] py-3">
                 <div className="container flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <a href="tel:+8801732559177" className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-white font-bold transition-all text-sm md:text-base">
+                        <a href={`tel:${phone}`} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-white font-bold transition-all text-sm md:text-base">
                             <FaPhone className="text-sm" /> 
-                            <span>+8801732559177</span>
+                            <span>{phone}</span>
                         </a>
                     </div>
                     
@@ -35,14 +38,10 @@ export default function Navbar() {
 
             {/* Sub Bar (Blue Call Button) */}
             <div className="mt-4 reveal-item">
-                <a href="tel:+8801732559177" className="btn-blue flex items-center gap-2 shadow-2xl scale-90 md:scale-100">
-                    <FaPhone /> কল করুন — +8801732559177
+                <a href={`tel:${phone}`} className="btn-blue flex items-center gap-2 shadow-2xl scale-90 md:scale-100">
+                    <FaPhone /> কল করুন — {phone}
                 </a>
             </div>
         </nav>
     );
 }
-
-
-
-

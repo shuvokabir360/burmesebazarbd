@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { FaEye, FaPlus } from 'react-icons/fa6';
+import { FaMoneyBillWave, FaBagShopping, FaCartArrowDown, FaPen, FaClock, FaCircleCheck, FaTruck, FaCircleXmark, FaPlus } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 
 const statusLabels = {
@@ -13,10 +13,11 @@ const statusLabels = {
 
 const statusOptions = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
-export default function OrdersTab() {
+export default function DashboardTab() {
     const [orders, setOrders] = useState([]);
-    const [products, setProducts] = useState([]);
+    const [stats, setStats] = useState({ earning: 0, today: 0, lifetime: 0 });
     const [filter, setFilter] = useState('pending');
+    const [loading, setLoading] = useState(true);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isAdding, setIsAdding] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -25,18 +26,26 @@ export default function OrdersTab() {
     });
 
     const fetchData = async () => {
-        // Fetch Orders
-        let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
-        if (filter !== 'all') query = query.eq('status', filter);
-        const { data } = await query;
-        if (data) setOrders(data);
+        setLoading(true);
+        const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (data) {
+            setOrders(data);
+            
+            // Calculate Stats
+            const earning = data.filter(o => o.status === 'delivered').reduce((acc, current) => acc + (Number(current.total_price) || 0), 0);
+            const today = data.filter(o => {
+                const todayDate = new Date().toLocaleDateString();
+                const orderDate = new Date(o.created_at).toLocaleDateString();
+                return todayDate === orderDate;
+            }).length;
+            const lifetime = data.length;
 
-        // Fetch Products for selection
-        const { data: pData } = await supabase.from('products').select('*');
-        if (pData) setProducts(pData);
+            setStats({ earning, today, lifetime });
+        }
+        setLoading(false);
     };
 
-    useEffect(() => { fetchData(); }, [filter]);
+    useEffect(() => { fetchData(); }, []);
 
     const updateStatus = async (id, status) => {
         await supabase.from('orders').update({ status }).eq('id', id);
@@ -94,69 +103,98 @@ export default function OrdersTab() {
             return new Date(b.created_at) - new Date(a.created_at);
         });
 
+    if (loading) return <div className="p-10 text-center opacity-50">লোড হচ্ছে...</div>;
+
     return (
         <div>
             <div className="admin-topbar">
-                <h1>🛒 অর্ডারসমূহ</h1>
-                <div className="flex gap-4">
-                    <button className="add-btn" onClick={() => setIsAdding(true)}><FaPlus /> নতুন অর্ডার</button>
-                    <div className="text-sm font-medium text-gray-400 self-center">ম্যানেজমেন্ট</div>
+                <h1>📊 অ্যাডমিন ড্যাশবোর্ড</h1>
+                <button className="add-btn" onClick={() => setIsAdding(true)}><FaPlus /> নতুন অর্ডার</button>
+            </div>
+
+            {/* Main Stats Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="dashboard-stat-card glossy-card-green">
+                    <div className="card-shine"></div>
+                    <div className="stat-icon-wrap bg-white/20 text-white"><FaMoneyBillWave /></div>
+                    <div className="mt-4 relative z-10">
+                        <div className="text-white/60 text-[10px] font-black uppercase tracking-[2px] mb-1">মোট আয় (EARNING)</div>
+                        <div className="text-4xl font-black text-white tracking-tight">৳{stats.earning.toLocaleString()}</div>
+                    </div>
+                </div>
+                <div className="dashboard-stat-card glossy-card-blue">
+                    <div className="card-shine"></div>
+                    <div className="stat-icon-wrap bg-white/20 text-white"><FaBagShopping /></div>
+                    <div className="mt-4 relative z-10">
+                        <div className="text-white/60 text-[10px] font-black uppercase tracking-[2px] mb-1">আজকের অর্ডার</div>
+                        <div className="text-4xl font-black text-white tracking-tight">{stats.today}</div>
+                    </div>
+                </div>
+                <div className="dashboard-stat-card glossy-card-purple">
+                    <div className="card-shine"></div>
+                    <div className="stat-icon-wrap bg-white/20 text-white"><FaCartArrowDown /></div>
+                    <div className="mt-4 relative z-10">
+                        <div className="text-white/60 text-[10px] font-black uppercase tracking-[2px] mb-1">সর্বমোট অর্ডার</div>
+                        <div className="text-4xl font-black text-white tracking-tight">{stats.lifetime}</div>
+                    </div>
                 </div>
             </div>
 
-            {/* Status Tabs Navigation */}
-            <div className="flex flex-wrap gap-2 mb-8 p-1 bg-gray-100/50 rounded-2xl w-fit">
-                <button 
-                    onClick={() => setFilter('all')}
-                    className={`status-tab-btn ${filter === 'all' ? 'active' : ''}`}
-                    style={{ borderRadius: '14px' }}
-                >
-                    সব ({orders.length})
-                </button>
-                {statusOptions.map(s => (
+            {/* Status Tabs */}
+            <div className="mb-6">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">🛒 অর্ডার স্ট্যাটাস <span className="text-xs px-2 py-1 bg-gray-100 rounded-lg">{orders.length}</span></h3>
+                <div className="flex flex-wrap gap-2">
                     <button 
-                        key={s}
-                        onClick={() => setFilter(s)}
-                        className={`status-tab-btn ${filter === s ? 'active' : ''} status-${s}`}
-                        style={{ borderRadius: '14px' }}
+                        onClick={() => setFilter('all')}
+                        className={`status-tab-btn ${filter === 'all' ? 'active' : ''}`}
                     >
-                        {statusLabels[s]} ({counts[s] || 0})
+                        সব ({orders.length})
                     </button>
-                ))}
+                    {statusOptions.map(s => (
+                        <button 
+                            key={s}
+                            onClick={() => setFilter(s)}
+                            className={`status-tab-btn ${filter === s ? 'active' : ''} status-${s}`}
+                        >
+                            {statusLabels[s]} ({counts[s] || 0})
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div className="admin-panel shadow-xl rounded-3xl border-none overflow-hidden">
-                <div className="panel-header bg-white border-b p-6">
-                    <h2 className="flex items-center gap-3">
-                        <span className={`w-3 h-3 rounded-full status-bg-${filter}`}></span>
-                        {filter === 'all' ? 'সকল অর্ডার' : statusLabels[filter]}
-                        <span className="text-xs font-bold text-gray-300">({filteredOrders.length})</span>
-                    </h2>
-                </div>
+            {/* Orders Table */}
+            <div className="admin-panel">
                 <div className="panel-body">
                     {filteredOrders.length === 0 ? (
-                        <div className="empty-state p-20 opacity-50">
-                            <p>এই ক্যাটাগরিতে কোনো অর্ডার পাওয়া যায়নি।</p>
+                        <div className="empty-state p-20">
+                            <div className="text-4xl mb-4 opacity-20">📦</div>
+                            <p>কোনো {filter !== 'all' ? statusLabels[filter] : ''} অর্ডার পাওয়া যায়নি</p>
                         </div>
                     ) : (
                         <table className="admin-table">
                             <thead>
                                 <tr>
-                                    <th>তারিখ</th><th>খরিদ্দার</th><th>লোকেশন</th><th>পরিমাণ</th><th>মোট মূল্য</th><th>অবস্থা</th><th>একশন</th>
+                                    <th>তারিখ</th><th>খরিদ্দার</th><th>লোকেশন</th><th>বিস্তারিত</th><th>মোট</th><th>অবস্থা</th><th>একশন</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredOrders.map(o => (
                                     <tr key={o.id}>
-                                        <td data-label="তারিখ" className="text-highlight-date">{new Date(o.created_at).toLocaleDateString('bn-BD')}</td>
+                                        <td data-label="তারিখ">
+                                            <div className="text-highlight-date">{new Date(o.created_at).toLocaleDateString('bn-BD')}</div>
+                                            <div className="text-[10px] text-gray-500 uppercase">{new Date(o.created_at).toLocaleTimeString()}</div>
+                                        </td>
                                         <td data-label="খরিদ্দার">
                                             <div className="text-highlight-name">{o.customer_name}</div>
                                             <div className="text-highlight-phone">{o.phone}</div>
                                         </td>
                                         <td data-label="লোকেশন">
-                                            <div className="text-[10px] font-bold text-gray-500">{o.district || '-'}</div>
+                                            <div className="text-xs font-bold text-gray-400">{o.district || 'N/A'}</div>
+                                            <div className="text-[10px] text-gray-500 truncate max-w-[120px]">{o.address}</div>
                                         </td>
-                                        <td data-label="পরিমাণ"><span className="bg-gray-700/40 text-gray-300 px-2 py-0.5 rounded text-[10px] font-bold">{o.quantity} পিস</span></td>
+                                        <td data-label="পরিমাণ">
+                                            <span className="px-2 py-1 bg-gray-600/30 text-gray-300 rounded text-xs font-bold">{o.quantity}টি পণ্য</span>
+                                        </td>
                                         <td data-label="মোট মূল্য"><strong className="text-highlight-price">৳{o.total_price}</strong></td>
                                         <td data-label="অবস্থা">
                                             <select
@@ -168,7 +206,7 @@ export default function OrdersTab() {
                                             </select>
                                         </td>
                                         <td data-label="একশন">
-                                            <button className="action-btn-circle" onClick={() => setSelectedOrder(o)}><FaEye /></button>
+                                            <button className="action-btn-circle" onClick={() => setSelectedOrder(o)}><FaPen /></button>
                                         </td>
                                     </tr>
                                 ))}
@@ -178,94 +216,57 @@ export default function OrdersTab() {
                 </div>
             </div>
 
+            {/* Modal for Order Details */}
             {selectedOrder && (
                 <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
                     <div className="modal-card wide shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
                         <div className="p-6 bg-gray-50 border-b flex justify-between items-center">
                             <h2 className="text-xl font-black">✏️ অর্ডার সম্পাদনা (এডিট)</h2>
-                            <button className="text-sm font-bold text-gray-400 hover:text-red-500" onClick={() => setSelectedOrder(null)}>বন্ধ করুন</button>
+                            <button className="text-sm font-bold text-gray-400" onClick={() => setSelectedOrder(null)}>বন্ধ করুন</button>
                         </div>
                         <div className="p-8 modal-form">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-4">
                                     <div className="form-group">
                                         <label>খরিদ্দারের নাম</label>
-                                        <input 
-                                            className="form-input" 
-                                            value={selectedOrder.customer_name} 
-                                            onChange={e => setSelectedOrder({...selectedOrder, customer_name: e.target.value})}
-                                        />
+                                        <input className="form-input" value={selectedOrder.customer_name} onChange={e => setSelectedOrder({...selectedOrder, customer_name: e.target.value})} />
                                     </div>
                                     <div className="form-group">
                                         <label>ফোন নম্বর</label>
-                                        <input 
-                                            className="form-input" 
-                                            value={selectedOrder.phone} 
-                                            onChange={e => setSelectedOrder({...selectedOrder, phone: e.target.value})}
-                                        />
+                                        <input className="form-input" value={selectedOrder.phone} onChange={e => setSelectedOrder({...selectedOrder, phone: e.target.value})} />
                                     </div>
                                     <div className="form-group">
                                         <label>পুরো ঠিকানা</label>
-                                        <textarea 
-                                            style={{ minHeight: 80 }}
-                                            className="form-input" 
-                                            value={selectedOrder.address} 
-                                            onChange={e => setSelectedOrder({...selectedOrder, address: e.target.value})}
-                                        />
+                                        <textarea style={{ minHeight: 80 }} className="form-input" value={selectedOrder.address} onChange={e => setSelectedOrder({...selectedOrder, address: e.target.value})} />
                                     </div>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="form-group">
                                             <label>পরিমাণ</label>
-                                            <input 
-                                                className="form-input" 
-                                                type="number"
-                                                value={selectedOrder.quantity} 
-                                                onChange={e => setSelectedOrder({...selectedOrder, quantity: parseInt(e.target.value) || 0})}
-                                            />
+                                            <input className="form-input" type="number" value={selectedOrder.quantity} onChange={e => setSelectedOrder({...selectedOrder, quantity: parseInt(e.target.value) || 0})} />
                                         </div>
                                         <div className="form-group">
                                             <label>মোট মূল্য (৳)</label>
-                                            <input 
-                                                className="form-input font-bold text-red-600" 
-                                                type="number"
-                                                value={selectedOrder.total_price} 
-                                                onChange={e => setSelectedOrder({...selectedOrder, total_price: parseInt(e.target.value) || 0})}
-                                            />
+                                            <input className="form-input font-bold text-red-600" type="number" value={selectedOrder.total_price} onChange={e => setSelectedOrder({...selectedOrder, total_price: parseInt(e.target.value) || 0})} />
                                         </div>
                                     </div>
                                     <div className="form-group">
                                         <label>স্ট্যাটাস</label>
-                                        <select
-                                            className={`form-input status-select status-${selectedOrder.status}`}
-                                            value={selectedOrder.status}
-                                            onChange={(e) => setSelectedOrder({...selectedOrder, status: e.target.value})}
-                                        >
+                                        <select className={`form-input status-select status-${selectedOrder.status}`} value={selectedOrder.status} onChange={(e) => setSelectedOrder({...selectedOrder, status: e.target.value})}>
                                             {statusOptions.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group">
                                         <label>অর্ডার নোট</label>
-                                        <textarea 
-                                            className="form-input bg-yellow-50/10" 
-                                            value={selectedOrder.notes || ''} 
-                                            onChange={e => setSelectedOrder({...selectedOrder, notes: e.target.value})}
-                                            placeholder="কোনো বিশেষ তথ্য থাকলে লিখুন..."
-                                        />
+                                        <textarea className="form-input bg-yellow-50/10" value={selectedOrder.notes || ''} onChange={e => setSelectedOrder({...selectedOrder, notes: e.target.value})} placeholder="নোট লিখুন..." />
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="p-6 bg-gray-50 border-t flex justify-end gap-3">
-                            <button className="px-6 py-2 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-500" onClick={() => setSelectedOrder(null)}>বাতিল</button>
-                            <button 
-                                className="px-8 py-2 bg-blue-600 text-white rounded-xl font-black text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-2"
-                                onClick={handleSaveEdit}
-                                disabled={saving}
-                            >
-                                {saving ? 'আপডেট হচ্ছে...' : 'পরিবর্তন সেভ করুন'}
-                            </button>
+                            <button className="px-6 py-2 bg-white border border-gray-300 rounded-xl" onClick={() => setSelectedOrder(null)}>বাতিল</button>
+                            <button className="px-8 py-2 bg-blue-600 text-white rounded-xl font-black" onClick={handleSaveEdit} disabled={saving}>{saving ? 'আপডেট হচ্ছে...' : 'সেভ করুন'}</button>
                         </div>
                     </div>
                 </div>
@@ -292,13 +293,13 @@ export default function OrdersTab() {
                                     </div>
                                     <div className="form-group">
                                         <label>পুরো ঠিকানা</label>
-                                        <textarea className="form-input" value={newOrderForm.address} onChange={e => setNewOrderForm({...newOrderForm, address: e.target.value})} placeholder="গ্রাম, থানা, জেলা..." />
+                                        <textarea className="form-input" value={newOrderForm.address} onChange={e => setNewOrderForm({...newOrderForm, address: e.target.value})} placeholder="ঠিকানা..." />
                                     </div>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="form-group">
                                         <label>পণ্য তালিকা (নোট)</label>
-                                        <textarea className="form-input bg-blue-50/10" value={newOrderForm.notes} onChange={e => setNewOrderForm({...newOrderForm, notes: e.target.value})} placeholder="কোন পণ্য কতগুলো (যেমন: ৫টি আমের আচার)" />
+                                        <textarea className="form-input bg-blue-50/10" value={newOrderForm.notes} onChange={e => setNewOrderForm({...newOrderForm, notes: e.target.value})} placeholder="পণ্যের নাম..." />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="form-group">
@@ -321,13 +322,7 @@ export default function OrdersTab() {
                         </div>
                         <div className="p-6 bg-gray-50 border-t flex justify-end gap-3">
                             <button className="px-6 py-2 bg-white border border-gray-300 rounded-xl" onClick={() => setIsAdding(false)}>বাতিল</button>
-                            <button 
-                                className="px-8 py-2 bg-red-600 text-white rounded-xl font-black shadow-lg shadow-red-200 hover:bg-red-700"
-                                onClick={handleCreateOrder}
-                                disabled={saving}
-                            >
-                                {saving ? 'সেভ হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}
-                            </button>
+                            <button className="px-8 py-2 bg-red-600 text-white rounded-xl font-black" onClick={handleCreateOrder} disabled={saving}>{saving ? 'সেভ হচ্ছে...' : 'অর্ডার কনফার্ম করুন'}</button>
                         </div>
                     </div>
                 </div>

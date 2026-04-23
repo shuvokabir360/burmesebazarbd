@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaBoxOpen, FaCartShopping, FaStar, FaGear, FaRightFromBracket, FaHouse, FaPaintbrush } from 'react-icons/fa6';
+import { FaBoxOpen, FaCartShopping, FaStar, FaGear, FaRightFromBracket, FaHouse, FaPaintbrush, FaGaugeHigh } from 'react-icons/fa6';
+import DashboardTab from '../../components/admin/DashboardTab';
 import LandingContentTab from '../../components/admin/LandingContentTab';
 import ProductsTab from '../../components/admin/ProductsTab';
 import OrdersTab from '../../components/admin/OrdersTab';
@@ -10,6 +11,7 @@ import SettingsTab from '../../components/admin/SettingsTab';
 import '../../styles/admin.css';
 
 const tabs = [
+    { id: 'overview', label: '📊 ড্যাশবোর্ড', shortLabel: 'হোম', icon: FaGaugeHigh, component: DashboardTab },
     { id: 'landing', label: '🎨 ল্যান্ডিং পেজ', shortLabel: 'পেজ', icon: FaPaintbrush, component: LandingContentTab },
     { id: 'products', label: '📦 পণ্যসমূহ', shortLabel: 'পণ্য', icon: FaBoxOpen, component: ProductsTab },
     { id: 'orders', label: '🛒 অর্ডারসমূহ', shortLabel: 'অর্ডার', icon: FaCartShopping, component: OrdersTab },
@@ -20,7 +22,7 @@ const tabs = [
 export default function AdminDashboard() {
     const { user, loading, signOut } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('orders');
+    const [activeTab, setActiveTab] = useState('overview');
 
     useEffect(() => {
         if (!loading && !user) navigate('/admin/login');
