@@ -26,6 +26,7 @@ function OrderModal({ onClose }) {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [form, setForm] = useState({ name: '', phone: '', address: '' });
+    const [abandonedOrderId, setAbandonedOrderId] = useState(null);
     const { content } = useLandingContent();
     const regularPrice = content.regular_price || '1000';
     const offerPrice = content.offer_price || '799';
@@ -43,6 +44,35 @@ function OrderModal({ onClose }) {
         return () => window.removeEventListener('keydown', onKey);
     }, [onClose]);
 
+    // Track Abandoned Cart (Auto-save)
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            if (form.phone.length === 11 && form.name.trim().length > 3 && !success) {
+                try {
+                    const orderData = {
+                        customer_name: form.name,
+                        phone: form.phone,
+                        address: form.address || 'ঠিকানা দেওয়া হয়নি',
+                        quantity: 1,
+                        total_price: Number(offerPrice),
+                        status: 'abandoned',
+                    };
+
+                    if (abandonedOrderId) {
+                        await supabase.from('orders').update(orderData).eq('id', abandonedOrderId);
+                    } else {
+                        const { data } = await supabase.from('orders').insert([orderData]).select().single();
+                        if (data) setAbandonedOrderId(data.id);
+                    }
+                } catch (err) {
+                    console.error('Abandoned capture error:', err);
+                }
+            }
+        }, 2000); // Debounce for 2 seconds
+
+        return () => clearTimeout(timer);
+    }, [form.name, form.phone]);
+
     const onChange = e => setForm({ ...form, [e.target.name]: e.target.value });
 
     const onSubmit = async e => {
@@ -52,15 +82,24 @@ function OrderModal({ onClose }) {
 
         setLoading(true);
         try {
-            const { error } = await supabase.from('orders').insert([{
+            const finalData = {
                 customer_name: form.name,
                 phone: form.phone,
                 address: form.address,
                 quantity: 1,
                 total_price: Number(offerPrice),
                 status: 'pending',
-            }]);
-            if (error) throw error;
+            };
+
+            if (abandonedOrderId) {
+                // Upgrade abandoned order to pending
+                const { error } = await supabase.from('orders').update(finalData).eq('id', abandonedOrderId);
+                if (error) throw error;
+            } else {
+                // Fresh order
+                const { error } = await supabase.from('orders').insert([finalData]);
+                if (error) throw error;
+            }
             setSuccess(true);
         } catch {
             alert('সমস্যা হয়েছে। আবার চেষ্টা করুন।');

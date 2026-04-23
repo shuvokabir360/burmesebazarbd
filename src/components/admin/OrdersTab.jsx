@@ -3,15 +3,16 @@ import { supabase } from '../../lib/supabase';
 import { FaEye, FaPlus } from 'react-icons/fa6';
 import toast from 'react-hot-toast';
 
-const statusLabels = {
-    pending: 'পেন্ডিং',
-    confirmed: 'কনফার্মড',
-    shipped: 'শিপড',
-    delivered: 'ডেলিভারড',
+const statusLabels = { 
+    pending: 'অপেক্ষমান', 
+    confirmed: 'নিশ্চিত', 
+    shipped: 'পাঠানো হয়েছে', 
+    delivered: 'ডেলিভারি সম্পন্ন', 
     cancelled: 'বাতিল',
+    abandoned: 'অসম্পূর্ণ'
 };
 
-const statusOptions = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+const statusOptions = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'abandoned'];
 
 export default function OrdersTab() {
     const [orders, setOrders] = useState([]);
@@ -41,10 +42,13 @@ export default function OrdersTab() {
 
         const channel = supabase
             .channel('orders_tab_realtime')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+                console.log('Real-time order change detected in Orders Tab!', payload);
                 fetchData();
             })
-            .subscribe();
+            .subscribe((status) => {
+                console.log('Orders Tab real-time status:', status);
+            });
 
         return () => {
             supabase.removeChannel(channel);

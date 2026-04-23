@@ -4,14 +4,15 @@ import { FaMoneyBillWave, FaBagShopping, FaCartArrowDown, FaPen, FaClock, FaCirc
 import toast from 'react-hot-toast';
 
 const statusLabels = {
-    pending: 'পেন্ডিং',
-    confirmed: 'কনফার্মড',
-    shipped: 'শিপড',
-    delivered: 'ডেলিভারড',
+    pending: 'অপেক্ষমান',
+    confirmed: 'নিশ্চিত',
+    shipped: 'পাঠানো হয়েছে',
+    delivered: 'ডেলিভারি সম্পন্ন',
     cancelled: 'বাতিল',
+    abandoned: 'অসম্পূর্ণ'
 };
 
-const statusOptions = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+const statusOptions = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'abandoned'];
 
 export default function DashboardTab() {
     const [orders, setOrders] = useState([]);
@@ -50,10 +51,13 @@ export default function DashboardTab() {
 
         const channel = supabase
             .channel('dashboard_realtime_orders')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+                console.log('Real-time order change detected in Dashboard!', payload);
                 fetchData();
             })
-            .subscribe();
+            .subscribe((status) => {
+                console.log('Dashboard real-time status:', status);
+            });
 
         return () => {
             supabase.removeChannel(channel);
