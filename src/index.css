@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════════════════
+   GLOBAL RESET + FONT IMPORTS
+   Tiro Bangla (Display) + Hind Siliguri (Body)
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Core Palette */
+    --color-primary: #c0392b;
+    --color-primary-dark: #96281b;
+    --color-primary-light: #e74c3c;
+    --color-accent: #e67e22;
+    --color-accent-light: #f39c12;
+    --color-gold: #f1c40f;
+    --color-green: #27ae60;
+    --color-green-light: #2ecc71;
+    --color-whatsapp: #25D366;
+
+    /* Backgrounds */
+    --bg-primary: #0f0f0f;
+    --bg-secondary: #1a1a1a;
+    --bg-card: #1e1e1e;
+    --bg-card-hover: #252525;
+    --bg-glass: rgba(255, 255, 255, 0.04);
+    --bg-glass-hover: rgba(255, 255, 255, 0.08);
+
+    /* Text */
+    --text-primary: #f5f5f5;
+    --text-secondary: #b0b0b0;
+    --text-muted: #777;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #c0392b, #e67e22);
+    --gradient-hero: linear-gradient(160deg, #0f0f0f 0%, #1a0a05 40%, #1a1209 70%, #0f0f0f 100%);
+    --gradient-card: linear-gradient(145deg, rgba(192,57,43,0.08), rgba(230,126,34,0.05));
+
+    /* Borders & Shadows */
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border-glow: rgba(192, 57, 43, 0.3);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 8px 32px rgba(0,0,0,0.4);
+    --shadow-lg: 0 16px 48px rgba(0,0,0,0.5);
+    --shadow-glow: 0 0 40px rgba(192, 57, 43, 0.15);
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 28px;
+    --radius-full: 999px;
+
+    /* Fonts — Bangla */
+    --font-display: 'Tiro Bangla', serif;
+    --font-body: 'Hind Siliguri', sans-serif;
+
+    /* Transitions */
+    --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    overflow-x: hidden;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition-fast);
+}
+
+ul { list-style: none; }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Text Gradient */
+.text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.strikethrough {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+/* Scroll Reveal */
+.reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
