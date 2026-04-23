@@ -211,11 +211,26 @@ export default function OrdersTab() {
                                     </div>
                                     <div className="form-group">
                                         <label>ফোন নম্বর</label>
-                                        <input 
-                                            className="form-input" 
-                                            value={selectedOrder.phone} 
-                                            onChange={e => setSelectedOrder({...selectedOrder, phone: e.target.value})}
-                                        />
+                                        <div className="relative">
+                                            <input 
+                                                className={`form-input !pr-10 ${selectedOrder.phone.length === 11 ? 'border-green-500 bg-green-50/10' : selectedOrder.phone.length > 0 ? 'border-red-400' : ''}`} 
+                                                value={selectedOrder.phone} 
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                                    setSelectedOrder({...selectedOrder, phone: val});
+                                                }} 
+                                                placeholder="017XXXXXXXX"
+                                            />
+                                            {selectedOrder.phone.length === 11 && (
+                                                <FaCircleCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xl animate-bounce-short" />
+                                            )}
+                                        </div>
+                                        {selectedOrder.phone.length > 0 && selectedOrder.phone.length < 11 && (
+                                            <span className="text-[10px] text-red-400 font-bold mt-1 block">⚠️ ১১ ডিজিট হতে হবে (বাকি আছে {11 - selectedOrder.phone.length} টি)</span>
+                                        )}
+                                        {selectedOrder.phone.length === 11 && (
+                                            <span className="text-[10px] text-green-500 font-bold mt-1 block">✅ নম্বরটি সঠিক আছে</span>
+                                        )}
                                     </div>
                                     <div className="form-group">
                                         <label>পুরো ঠিকানা</label>
@@ -301,7 +316,26 @@ export default function OrdersTab() {
                                     </div>
                                     <div className="form-group">
                                         <label>ফোন নম্বর</label>
-                                        <input className="form-input" value={newOrderForm.phone} onChange={e => setNewOrderForm({...newOrderForm, phone: e.target.value})} placeholder="017XXXXXXXX" />
+                                        <div className="relative">
+                                            <input 
+                                                className={`form-input !pr-10 ${newOrderForm.phone.length === 11 ? 'border-green-500 bg-green-50/10' : newOrderForm.phone.length > 0 ? 'border-red-400' : ''}`} 
+                                                value={newOrderForm.phone} 
+                                                onChange={e => {
+                                                    const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                                                    setNewOrderForm({...newOrderForm, phone: val});
+                                                }} 
+                                                placeholder="017XXXXXXXX" 
+                                            />
+                                            {newOrderForm.phone.length === 11 && (
+                                                <FaCircleCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 text-xl animate-bounce-short" />
+                                            )}
+                                        </div>
+                                        {newOrderForm.phone.length > 0 && newOrderForm.phone.length < 11 && (
+                                            <span className="text-[10px] text-red-400 font-bold mt-1 block">⚠️ ১১ ডিজিট হতে হবে (বাকি আছে {11 - newOrderForm.phone.length} টি)</span>
+                                        )}
+                                        {newOrderForm.phone.length === 11 && (
+                                            <span className="text-[10px] text-green-500 font-bold mt-1 block">✅ নম্বরটি সঠিক আছে</span>
+                                        )}
                                     </div>
                                     <div className="form-group">
                                         <label>পুরো ঠিকানা</label>
