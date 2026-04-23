@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '../../lib/supabase';
 import { FaBagShopping, FaTruck, FaLock, FaCircleCheck, FaXmark, FaCheck } from 'react-icons/fa6';
+import { useLandingContent } from '../../context/LandingContentContext';
 
 const ModalContext = createContext();
 
@@ -25,6 +26,9 @@ function OrderModal({ onClose }) {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [form, setForm] = useState({ name: '', phone: '', address: '' });
+    const { content } = useLandingContent();
+    const regularPrice = content.regular_price || '1000';
+    const offerPrice = content.offer_price || '799';
 
     // Lock body scroll when modal is open
     useEffect(() => {
@@ -53,7 +57,7 @@ function OrderModal({ onClose }) {
                 phone: form.phone,
                 address: form.address,
                 quantity: 1,
-                total_price: 799,
+                total_price: Number(offerPrice),
                 status: 'pending',
             }]);
             if (error) throw error;
@@ -144,8 +148,8 @@ function OrderModal({ onClose }) {
                                 <div className="text-xs" style={{ color: '#9CA3AF' }}>৬ আইটেম + ১ ফ্রি</div>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs line-through" style={{ color: '#9CA3AF' }}>৳১০০০</div>
-                                <div className="text-xl font-bold" style={{ color: '#B91C1C' }}>৳৭৯৯</div>
+                                <div className="text-xs line-through" style={{ color: '#9CA3AF' }}>৳{regularPrice}</div>
+                                <div className="text-xl font-bold" style={{ color: '#B91C1C' }}>৳{offerPrice}</div>
                             </div>
                         </div>
 

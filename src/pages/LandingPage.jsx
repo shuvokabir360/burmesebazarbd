@@ -8,36 +8,22 @@ import FaqSection from '../components/landing/FaqSection';
 import Footer from '../components/landing/Footer';
 import StickyFooter from '../components/landing/StickyFooter';
 import { OrderModalProvider } from '../components/landing/OrderModal';
+import { LandingContentProvider } from '../context/LandingContentContext';
 
 export default function LandingPage() {
     return (
-        <OrderModalProvider>
-            {/* 1. Hero — The Hook */}
-            <HeroSection />
-
-            {/* 2. Social Proof & Trust Badges */}
-            <TrustBadges />
-
-            {/* 3. Urgency & Pricing (FOMO) */}
-            <PricingBlock />
-
-            {/* 4. Product Features (Why Us?) */}
-            <BenefitsSection />
-
-            {/* 5. The Combo Package (Value Stack) */}
-            <ComboSection />
-
-            {/* 6. Customer Testimonials */}
-            <ReviewsSection />
-
-            {/* 7. FAQ */}
-            <FaqSection />
-
-            {/* 8. Footer & Final CTA */}
-            <Footer />
-
-            {/* Mobile Sticky CTA */}
-            <StickyFooter />
-        </OrderModalProvider>
+        <LandingContentProvider>
+            <OrderModalProvider>
+                <HeroSection />
+                <TrustBadges />
+                <PricingBlock />
+                <BenefitsSection />
+                <ComboSection />
+                <ReviewsSection />
+                <FaqSection />
+                <Footer />
+                <StickyFooter />
+            </OrderModalProvider>
+        </LandingContentProvider>
     );
 }

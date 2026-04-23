@@ -1,18 +1,21 @@
 import { FaBagShopping, FaTruck, FaRotateLeft, FaShieldHalved } from 'react-icons/fa6';
 import { useOrderModal } from './OrderModal';
+import { useLandingContent } from '../../context/LandingContentContext';
 
 export default function Footer() {
     const { open } = useOrderModal();
+    const { content } = useLandingContent();
+    const offerPrice = content.offer_price || '799';
 
     return (
         <footer>
             {/* Final CTA Strip */}
             <div className="py-20 text-center" style={{ background: 'var(--red)', color: 'white' }}>
                 <div className="container max-w-2xl">
-                    <h2 className="text-2xl md:text-4xl font-bold mb-4">সেরা কোয়ালিটির আচার কম্বো প্যাকেজ</h2>
-                    <p className="opacity-80 mb-10">এখনই অর্ডার করতে নিচের বাটনে ক্লিক করুন</p>
+                    <h2 className="text-2xl md:text-4xl font-bold mb-4">{content.footer_cta_headline}</h2>
+                    <p className="opacity-80 mb-10">{content.footer_cta_subtitle}</p>
                     <button onClick={open} className="btn-order-yellow btn-order text-xl">
-                        <FaBagShopping /> এখনই অর্ডার করুন — ৳৭৯৯
+                        <FaBagShopping /> এখনই অর্ডার করুন — ৳{offerPrice}
                     </button>
                 </div>
             </div>

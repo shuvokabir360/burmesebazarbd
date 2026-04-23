@@ -1,20 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { FaBagShopping, FaTruck, FaCircleCheck } from 'react-icons/fa6';
 import { useOrderModal } from './OrderModal';
-
-const items = [
-    { emoji: '🥭', name: 'আমের আচার', weight: '৩০০ গ্রাম' },
-    { emoji: '🍋', name: 'চালতার আচার', weight: '৩০০ গ্রাম' },
-    { emoji: '🍒', name: 'বড়ই আচার', weight: '৩০০ গ্রাম' },
-    { emoji: '🌶️', name: 'মিক্সড আচার', weight: '৩০০ গ্রাম' },
-    { emoji: '🟤', name: 'তেতুলের আচার', weight: '৩০০ গ্রাম' },
-    { emoji: '🦐', name: 'চিংড়ি বালাচাও', weight: '' },
-    { emoji: '🍬', name: 'স্ট্রবেরি ক্যান্ডি', weight: 'ফ্রি!', free: true },
-];
+import { useLandingContent, parseComboItems } from '../../context/LandingContentContext';
 
 export default function ComboSection() {
     const ref = useRef(null);
     const { open } = useOrderModal();
+    const { content } = useLandingContent();
+
+    const items = parseComboItems(content.combo_items);
+    const offerPrice = content.offer_price || '799';
+    const regularPrice = content.regular_price || '1000';
+
     useEffect(() => {
         const observer = new IntersectionObserver(
             entries => entries.forEach(e => e.isIntersecting && e.target.classList.add('visible')),
@@ -28,7 +25,7 @@ export default function ComboSection() {
         <section ref={ref} id="combo" style={{ background: 'var(--white)' }}>
             <div className="container max-w-4xl">
                 <h2 className="reveal section-title">
-                    সেরা কোয়ালিটির <span style={{ color: 'var(--red)' }}>আচার কম্বো প্যাকেজ</span>
+                    {content.combo_headline} <span style={{ color: 'var(--red)' }}>{content.combo_headline_highlight}</span>
                 </h2>
                 <p className="reveal reveal-delay-1 section-subtitle">
                     এখনই অর্ডার করতে নিচের বাটনে ক্লিক করুন
@@ -38,7 +35,7 @@ export default function ComboSection() {
                     {/* Header */}
                     <div className="p-6 md:p-8 text-center" style={{ background: 'var(--red)', color: 'white' }}>
                         <p className="text-sm font-semibold uppercase tracking-widest mb-2 opacity-80">📦 প্যাকেজে যা থাকছে</p>
-                        <h3 className="text-2xl md:text-3xl font-bold">৭টি প্রিমিয়াম আইটেম</h3>
+                        <h3 className="text-2xl md:text-3xl font-bold">{items.length}টি প্রিমিয়াম আইটেম</h3>
                     </div>
 
                     {/* Items List */}
@@ -73,8 +70,8 @@ export default function ComboSection() {
 
                         {/* Price + CTA */}
                         <div className="mt-8 pt-6 border-t border-dashed text-center" style={{ borderColor: 'var(--gray-200)' }}>
-                            <div className="mb-2 text-sm font-semibold line-through" style={{ color: 'var(--gray-400)' }}>৳১০০০</div>
-                            <div className="text-4xl font-bold mb-1" style={{ color: 'var(--red)' }}>৳৭৯৯</div>
+                            <div className="mb-2 text-sm font-semibold line-through" style={{ color: 'var(--gray-400)' }}>৳{regularPrice}</div>
+                            <div className="text-4xl font-bold mb-1" style={{ color: 'var(--red)' }}>৳{offerPrice}</div>
                             <div className="text-sm font-semibold mb-8 flex items-center justify-center gap-2" style={{ color: 'var(--green)' }}>
                                 <FaTruck /> ডেলিভারি চার্জ একদম ফ্রি!
                             </div>
@@ -85,11 +82,8 @@ export default function ComboSection() {
                                 <span className="flex items-center gap-1.5"><FaCircleCheck style={{ color: 'var(--green)' }} /> মানসম্মত</span>
                             </div>
 
-                            <button
-                                onClick={open}
-                                className="btn-order mx-auto"
-                            >
-                                <FaBagShopping /> অর্ডার করুন — ৳৭৯৯
+                            <button onClick={open} className="btn-order mx-auto">
+                                <FaBagShopping /> অর্ডার করুন — ৳{offerPrice}
                             </button>
 
                             <p className="mt-5 text-xs font-semibold" style={{ color: 'var(--red)' }}>

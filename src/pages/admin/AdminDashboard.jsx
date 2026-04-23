@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FaBoxOpen, FaCartShopping, FaStar, FaGear, FaRightFromBracket, FaHouse } from 'react-icons/fa6';
+import { FaBoxOpen, FaCartShopping, FaStar, FaGear, FaRightFromBracket, FaHouse, FaPaintbrush } from 'react-icons/fa6';
+import LandingContentTab from '../../components/admin/LandingContentTab';
 import ProductsTab from '../../components/admin/ProductsTab';
 import OrdersTab from '../../components/admin/OrdersTab';
 import ReviewsTab from '../../components/admin/ReviewsTab';
@@ -9,16 +10,17 @@ import SettingsTab from '../../components/admin/SettingsTab';
 import '../../styles/admin.css';
 
 const tabs = [
-    { id: 'products', label: '📦 পণ্যসমূহ', icon: FaBoxOpen, component: ProductsTab },
-    { id: 'orders', label: '🛒 অর্ডারসমূহ', icon: FaCartShopping, component: OrdersTab },
-    { id: 'reviews', label: '⭐ রিভিউ', icon: FaStar, component: ReviewsTab },
-    { id: 'settings', label: '⚙️ সেটিংস', icon: FaGear, component: SettingsTab },
+    { id: 'landing', label: '🎨 ল্যান্ডিং পেজ', shortLabel: 'পেজ', icon: FaPaintbrush, component: LandingContentTab },
+    { id: 'products', label: '📦 পণ্যসমূহ', shortLabel: 'পণ্য', icon: FaBoxOpen, component: ProductsTab },
+    { id: 'orders', label: '🛒 অর্ডারসমূহ', shortLabel: 'অর্ডার', icon: FaCartShopping, component: OrdersTab },
+    { id: 'reviews', label: '⭐ রিভিউ', shortLabel: 'রিভিউ', icon: FaStar, component: ReviewsTab },
+    { id: 'settings', label: '⚙️ সেটিংস', shortLabel: 'সেটিংস', icon: FaGear, component: SettingsTab },
 ];
 
 export default function AdminDashboard() {
     const { user, loading, signOut } = useAuth();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('products');
+    const [activeTab, setActiveTab] = useState('orders');
 
     useEffect(() => {
         if (!loading && !user) navigate('/admin/login');
@@ -43,6 +45,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="admin-layout">
+            {/* Desktop Sidebar */}
             <aside className="admin-sidebar">
                 <div className="sidebar-header">
                     <div className="logo">
@@ -71,9 +74,26 @@ export default function AdminDashboard() {
                     </button>
                 </div>
             </aside>
+
+            {/* Main Content */}
             <main className="admin-main">
                 <ActiveComponent />
             </main>
+
+            {/* Mobile Bottom Tab Bar */}
+            <nav className="mobile-bottom-bar">
+                {tabs.map(t => (
+                    <button
+                        key={t.id}
+                        className={`bottom-tab ${activeTab === t.id ? 'active' : ''}`}
+                        onClick={() => setActiveTab(t.id)}
+                    >
+                        <t.icon className="bottom-tab-icon" />
+                        <span className="bottom-tab-label">{t.shortLabel}</span>
+                        {activeTab === t.id && <span className="bottom-tab-dot" />}
+                    </button>
+                ))}
+            </nav>
         </div>
     );
 }
